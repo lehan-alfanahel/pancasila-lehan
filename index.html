@@ -1381,7 +1381,7 @@
         if(selectedIdx === currentQuestion.answer) {
             playSound('correct');
             feedback.className = 'feedback-box success';
-            feedback.innerHTML = `✅ BENAR!<br><small>${currentQuestion.explanation}</small>`;
+            feedback.innerHTML = `BENAR!<br><small>${currentQuestion.explanation}</small>`;
             GAME.score += 100;
             GAME.correctAnswers++;
             GAME.levelCorrectCount++;
