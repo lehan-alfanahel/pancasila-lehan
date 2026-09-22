@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Balap Pancasila - Balapan Seru, Belajar Pancasila!</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --red: #E62020;
+            --white: #FFFFFF;
+            --blue: #2196F3;
+            --yellow: #FFC107;
+            --green: #4CAF50;
+            --orange: #FF9800;
+            --dark: #333333;
+            --bg-color: #87CEEB; /* Sky blue */
+            --font-main: 'Segoe UI', 'Comic Sans MS', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--dark);
+            font-family: var(--font-main);
+            touch-action: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--bg-color);
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            padding: 20px;
+            text-align: center;
+            color: var(--white);
+        }
+
+        .overlay.active {
+            display: flex;
+        }
+
+        .panel {
+            background: var(--white);
+            color: var(--dark);
+            border-radius: 20px;
+            padding: 30px;
+            width: 95%;
+            max-width: 680px;
+            max-height: 92vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 5px solid var(--red);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        h1, h2, h3 {
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: 900;
+        }
+
+        h1.title {
+            color: var(--white);
+            text-shadow: 3px 3px 0 var(--red), -1px -1px 0 var(--dark), 1px -1px 0 var(--dark), -1px 1px 0 var(--dark), 1px 1px 0 var(--dark);
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: var(--yellow);
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        button {
+            background: linear-gradient(to bottom, var(--red), #b71c1c);
+            color: var(--white);
+            border: none;
+            padding: 15px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 10px;
+            margin: 10px 5px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #7f0000;
+            transition: all 0.1s;
+            font-family: var(--font-main);
+            text-transform: uppercase;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        button:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 #7f0000;
+        }
+
+        button.btn-blue { background: linear-gradient(to bottom, var(--blue), #1565C0); box-shadow: 0 5px 0 #0D47A1; }
+        button.btn-blue:active { box-shadow: 0 0 0 #0D47A1; }
+        button.btn-green { background: linear-gradient(to bottom, var(--green), #2E7D32); box-shadow: 0 5px 0 #1B5E20; }
+        button.btn-green:active { box-shadow: 0 0 0 #1B5E20; }
+        button.btn-yellow { background: linear-gradient(to bottom, var(--yellow), #FF8F00); color: var(--dark); box-shadow: 0 5px 0 #E65100; }
+        button.btn-yellow:active { box-shadow: 0 0 0 #E65100; }
+        
+        button:disabled {
+            background: #999;
+            box-shadow: 0 5px 0 #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            border: 3px solid var(--blue);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-family: var(--font-main);
+        }
+
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: none;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .hud-box {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 15px;
+            border-radius: 15px;
+            border: 2px solid var(--dark);
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            box-shadow: 2px 2px 0 var(--dark);
+        }
+
+        .hud-left { display: flex; flex-direction: column; align-items: flex-start; }
+        .hud-right { display: flex; flex-direction: column; align-items: flex-end; }
+
+        #progress-container {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50%;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid var(--dark);
+            border-radius: 10px;
+            height: 25px;
+            z-index: 5;
+            display: none;
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--green);
+            border-radius: 8px;
+            transition: width 0.3s;
+        }
+        #progress-text {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        #pause-btn {
+            position: absolute; top: 95px; right: 20px;
+            width: 45px; height: 45px; border-radius: 50%;
+            background: rgba(255,255,255,0.9); border: 2px solid var(--dark);
+            font-size: 22px; display: none; z-index: 6; cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            justify-content: center; align-items: center;
+        }
+
+        #mobile-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            display: none;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .d-pad { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            pointer-events: auto;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 12px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+        }
+        .d-pad-row { display: flex; gap: 10px; }
+        
+        .ctrl-btn {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 3px solid rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            margin: 4px;
+            color: var(--dark);
+            user-select: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: background 0.1s, transform 0.1s;
+        }
+        .ctrl-btn:active, .ctrl-btn.pressed { 
+            background: rgba(255, 255, 255, 1); 
+            transform: scale(0.92);
+        }
+        .ctrl-btn-action { 
+            width: 130px; 
+            height: 70px; 
+            border-radius: 35px; 
+            pointer-events: auto;
+            font-weight: 900;
+            font-size: 1.2rem;
+            background: linear-gradient(to bottom, var(--yellow), #FF8F00);
+            color: #fff;
+            border: 3px solid #fff;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .ctrl-btn-action:active { transform: scale(0.92); }
+
+        #landscape-prompt {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background:#111; color:#fff; z-index:999; display:none;
+            flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:20px;
+        }
+        
+        .stars-container { font-size: 2.5rem; color: #FFC107; margin: 10px 0; }
+        .star { opacity: 0.3; }
+        .star.earned { opacity: 1; text-shadow: 0 0 10px #FFC107; }
+
+        /* Question screen styling updates */
+        #screen-question .panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        #timer-box {
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: #FFC107;
+            color: #333;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            border: 2px solid #333;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+        }
+
+        .question-text {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #1e1b4b;
+            margin-bottom: 20px;
+            line-height: 1.4;
+            width: 100%;
+        }
+
+        #q-options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 650px) {
+            #q-options {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .option-btn {
+            background: linear-gradient(to bottom, var(--red), #b71c1c);
+            color: var(--white);
+            border: none;
+            padding: 16px 20px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #7f0000;
+            transition: all 0.1s;
+            font-family: var(--font-main);
+            width: 100%;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+        }
+
+        .option-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #7f0000;
+        }
+
+        .option-btn.correct {
+            background: linear-gradient(to bottom, var(--green), #1b5e20) !important;
+            box-shadow: 0 4px 0 #0d3811 !important;
+        }
+
+        .option-btn.wrong {
+            background: linear-gradient(to bottom, #757575, #424242) !important;
+            box-shadow: 0 4px 0 #212121 !important;
+        }
+
+        .feedback-box {
+            margin-top: 15px;
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 600px;
+            display: none;
+        }
+        .feedback-box.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .feedback-box.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            #screen-cert { background: white !important; padding: 0 !important; }
+            #certificate-panel { box-shadow: none !important; border: 4px double #000 !important; width: 100% !important; max-width: 100% !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- HUD -->
+    <div id="hud">
+        <div class="hud-box hud-left">
+            <div id="hud-lives">❤️❤️❤️</div>
+            <div style="font-size:0.9rem; margin-top:2px;">⭐ Skor: <span id="hud-score">0</span></div>
+        </div>
+        <div class="hud-box hud-right">
+            <div>🪙 <span id="hud-coins">0</span></div>
+            <div style="font-size:0.9rem; margin-top:2px;">🚀 <span id="hud-speed">0</span> km/h</div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+        <div id="progress-text">Soal: 0/5</div>
+    </div>
+
+    <div id="pause-btn">⚙️</div>
+
+    <!-- On-Screen Controls -->
+    <div id="mobile-controls">
+        <div class="d-pad">
+            <div class="ctrl-btn" id="btn-up">▲</div>
+            <div class="d-pad-row">
+                <div class="ctrl-btn" id="btn-left">◀</div>
+                <div class="ctrl-btn" id="btn-down">▼</div>
+                <div class="ctrl-btn" id="btn-right">▶</div>
+            </div>
+        </div>
+        <div style="display: flex; align-items: flex-end; pointer-events: auto;">
+            <div class="ctrl-btn-action" id="btn-boost">🚀 BOOST</div>
+        </div>
+    </div>
+    
+    <!-- Screen: Cover / Welcome Intro (Sesuai Referensi Gambar) -->
+    <div id="screen-cover" class="overlay active" style="background: #122244; background-image: radial-gradient(#1e3a6e 1px, transparent 1px); background-size: 24px 24px;">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; max-width: 600px; padding: 20px; text-align: center;">
+            
+            <!-- Foto Guru / Profil -->
+            <div style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid #38bdf8; overflow: hidden; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); background: #1e293b;">
+                <img src="data:image/jpeg;base64,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" alt="Pak Guru" id="teacher-avatar" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://placehold.co/100x100/1e293b/ffffff?text=Guru'">
+            </div>
+
+            <!-- Judul Game -->
+            <h1 style="color: #ffffff; font-size: 2rem; font-weight: 900; margin-bottom: 8px; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">BALAP PANCASILA</h1>
+            
+            <!-- Kelas / Subjudul -->
+            <div style="background: rgba(249, 115, 22, 0.2); border: 1px solid #f97316; color: #fb923c; padding: 4px 16px; border-radius: 20px; font-weight: 800; font-size: 0.95rem; margin-bottom: 12px; text-transform: uppercase;">
+                KELAS 5
+            </div>
+
+            <!-- Nama Sekolah -->
+            <p style="color: #cbd5e1; font-size: 1rem; font-weight: 700; margin-bottom: 18px; letter-spacing: 0.5px;">SD NEGERI 2 SENDANG AYU</p>
+
+            <!-- Badge Materi -->
+            <div style="background: rgba(30, 58, 138, 0.6); border: 1px solid rgba(56, 189, 248, 0.3); color: #e2e8f0; padding: 10px 20px; border-radius: 30px; font-size: 0.9rem; font-weight: 600; margin-bottom: 30px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);">
+                📚 Nilai Pancasila, Tolong-Menolong & Gotong Royong
+            </div>
+
+            <!-- Tombol Mulai Bermain -->
+            <button id="btn-cover-start" style="background: linear-gradient(to bottom, #f97316, #c2410c); color: #ffffff; border: none; padding: 16px 36px; font-size: 1.15rem; font-weight: 900; border-radius: 35px; cursor: pointer; box-shadow: 0 6px 0 #9a3412, 0 10px 20px rgba(0,0,0,0.3); transition: all 0.1s; display: flex; align-items: center; justify-content: center; gap: 10px; width: auto; max-width: none; text-transform: uppercase;">
+                MULAI BERMAIN ➔
+            </button>
+
+            <!-- Tombol Layar Penuh -->
+            <button id="btn-fullscreen" style="background: transparent; border: none; color: #94a3b8; font-size: 0.85rem; font-weight: 600; margin-top: 25px; cursor: pointer; box-shadow: none; width: auto; padding: 5px 10px; display: flex; align-items: center; gap: 6px;">
+                ⛶ Layar Penuh
+            </button>
+        </div>
+    </div>
+
+    <!-- Screen: Start / Name Input -->
+    <div id="screen-start" class="overlay">
+        <h1 class="title">BALAP PANCASILA</h1>
+        <div class="subtitle">Balapan Seru, Belajar Pancasila!</div>
+        <div class="panel">
+            <h2>Siapa nama kamu?</h2>
+            <input type="text" id="player-name" placeholder="Masukkan nama..." maxlength="15">
+            <button id="btn-save-name" style="margin-top: 10px;">LANJUTKAN</button>
+        </div>
+    </div>
+
+    <!-- Screen: Main Menu -->
+    <div id="screen-menu" class="overlay">
+        <h1 class="title">BALAP PANCASILA</h1>
+        <h3 id="welcome-text">Halo, Pemain!</h3>
+        <div style="display:flex; flex-direction:column; width:100%; max-width:300px; gap: 5px; align-items:center;">
+            <button id="menu-play">🚗 MULAI BALAP</button>
+            <button class="btn-blue" id="menu-material">📚 MATERI</button>
+            <button class="btn-green" id="menu-tutorial">📖 PETUNJUK</button>
+            <button class="btn-yellow" id="menu-highscore">🏆 SKOR TERTINGGI</button>
+            <button class="btn-blue" id="menu-settings">⚙️ PENGATURAN</button>
+            <button id="menu-about">ℹ️ TENTANG</button>
+        </div>
+    </div>
+
+    <!-- Screen: Level Select -->
+    <div id="screen-levels" class="overlay">
+        <div class="panel" style="display:flex; flex-direction:column; align-items:center;">
+            <h2>PILIH LEVEL</h2>
+            <button class="btn-green" id="lvl-1">LEVEL 1 - Mudah<br><small>Jelajah Pancasila</small></button>
+            <button class="btn-yellow" id="lvl-2">LEVEL 2 - Sedang<br><small>Tantangan Kebersamaan</small></button>
+            <button class="btn-red" id="lvl-3" style="background:var(--red);">LEVEL 3 - Sulit<br><small>Misi Generasi Pancasila</small></button>
+            <button class="btn-blue no-print" onclick="showScreen('screen-menu')">KEMBALI</button>
+        </div>
+    </div>
+
+    <!-- Screen: Question Modal -->
+    <div id="screen-question" class="overlay" style="background:rgba(0,0,0,0.95); z-index:20;">
+        <div class="panel" style="max-width: 850px; width: 95%;">
+            <div id="timer-box">20</div>
+            <div class="question-text" id="q-text">Pertanyaan muncul di sini?</div>
+            <div id="q-options" style="display:flex; flex-direction:column; gap:10px;"></div>
+            <div id="q-feedback" class="feedback-box"></div>
+            <button id="btn-next-q" style="display:none; margin-top:15px; width:100%;">LANJUT BALAP</button>
+        </div>
+    </div>
+
+    <!-- Screen: Game Over -->
+    <div id="screen-gameover" class="overlay">
+        <div class="panel" style="display:flex; flex-direction:column; align-items:center;">
+            <h1 style="color:var(--red);">GAME OVER</h1>
+            <p>Jangan menyerah! Tetap semangat belajar.</p>
+            <div style="margin:20px 0; text-align:left; background:#f9f9f9; padding:15px; border-radius:10px; width:100%;">
+                <p>⭐ Skor: <strong id="go-score">0</strong></p>
+                <p>🪙 Koin: <strong id="go-coins">0</strong></p>
+                <p>✅ Benar: <strong id="go-correct">0</strong></p>
+                <p>❌ Salah: <strong id="go-wrong">0</strong></p>
+            </div>
+            <button class="btn-green" id="btn-restart-go">🔄 MAIN LAGI</button>
+            <button class="btn-blue" onclick="showScreen('screen-menu')">🏠 MENU UTAMA</button>
+        </div>
+    </div>
+
+    <!-- Screen: Victory -->
+    <div id="screen-victory" class="overlay">
+        <div class="panel" id="victory-panel" style="display:flex; flex-direction:column; align-items:center;">
+            <h1 style="color:var(--green);">🏁 FINISH! 🎉</h1>
+            <h2 id="vic-title">JUARA PANCASILA</h2>
+            <div class="stars-container">
+                <span class="star" id="star-1">★</span>
+                <span class="star" id="star-2">★</span>
+                <span class="star" id="star-3">★</span>
+            </div>
+            <p id="vic-message">Hebat! Kamu memahami banyak nilai Pancasila.</p>
+            
+            <div style="margin:15px 0; text-align:left; background:#f9f9f9; padding:10px; border-radius:10px; font-size:0.9rem; width:100%;">
+                <p>⭐ Skor: <strong id="vic-score">0</strong></p>
+                <p>🪙 Koin: <strong id="vic-coins">0</strong></p>
+                <p>✅ Benar: <strong id="vic-correct">0</strong></p>
+                <p>🎯 Akurasi: <strong id="vic-acc">0%</strong></p>
+            </div>
+            
+            <button class="btn-yellow" id="btn-cert">🏆 LIHAT SERTIFIKAT</button>
+            <button class="btn-green" id="btn-next-level">LEVEL SELANJUTNYA</button>
+            <button class="btn-blue" onclick="showScreen('screen-menu')">🏠 MENU UTAMA</button>
+        </div>
+    </div>
+
+    <!-- Screen: Certificate -->
+    <div id="screen-cert" class="overlay" style="background:rgba(0,0,0,0.85); z-index: 100; overflow-y:auto; align-items:center; justify-content:center; padding:20px;">
+        <div id="certificate-panel" style="background:#FFFDF5; color:#2c3e50; border:6px double #D4AF37; width:920px; max-width:98%; padding:30px 40px; margin:auto; border-radius:12px; box-shadow:0 15px 35px rgba(0,0,0,0.4); text-align:center; position:relative; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display:block;">
+            
+            <div style="position:absolute; top:12px; left:12px; right:12px; bottom:12px; border:1px solid #E6C687; pointer-events:none; border-radius:8px;"></div>
+
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px; margin-bottom:8px;">
+                <div style="width:48px; height:48px; background:#FEF9E7; border:2px solid #D4AF37; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; box-shadow:0 3px 6px rgba(0,0,0,0.1);">
+                    🏫
+                </div>
+                <div style="text-align:left;">
+                    <h3 style="margin:0; font-size:1.05rem; font-weight:900; color:#1a202c; letter-spacing:0.5px;">SD NEGERI 2 SENDANG AYU</h3>
+                    <p style="margin:2px 0 0 0; font-size:0.75rem; color:#4b5563; font-weight:600;">Kecamatan Padang Ratu, Kabupaten Lampung Tengah</p>
+                </div>
+            </div>
+
+            <hr style="border:none; border-top:2px solid #D4AF37; margin:10px 0 15px 0;">
+
+            <h1 style="margin:0 0 4px 0; font-size:1.6rem; font-weight:900; color:#1e1b4b; letter-spacing:1.5px; text-transform:uppercase;">SERTIFIKAT PENGHARGAAN</h1>
+            <div style="width:80px; height:3.5px; background:linear-gradient(90deg, #D4AF37, #FDE047, #D4AF37); margin:0 auto 12px auto; border-radius:2px;"></div>
+            
+            <p style="margin:0 0 3px 0; font-size:0.85rem; font-weight:800; color:#b45309; text-transform:uppercase; letter-spacing:1px;">JUARA GAME EDUKASI PANCASILA</p>
+            <p style="margin:0 0 10px 0; font-size:0.75rem; color:#6b7280; font-style:italic;">Diberikan dengan bangga kepada :</p>
+
+            <h2 id="cert-name" style="margin:0 0 3px 0; font-size:1.9rem; font-weight:900; color:#312e81; letter-spacing:1.5px; text-transform:uppercase; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">NAMA PEMAIN</h2>
+            <div style="width:220px; height:2px; background:#D4AF37; margin:0 auto 10px auto; border-radius:1px;"></div>
+            <p style="margin:0 0 12px 0; font-size:0.8rem; color:#374151; font-weight:700;">Siswa Aktif - SD Negeri 2 Sendang Ayu</p>
+
+            <p style="margin:0 auto 15px auto; font-size:0.8rem; color:#1f2937; line-height:1.5; max-width:700px; background:rgba(254, 243, 199, 0.3); padding:8px 15px; border-radius:6px; border:1px dashed #FCD34D;">
+                Telah berhasil menyelesaikan seluruh tantangan permainan edukasi dan menguasai materi <strong>"Hubungan Antarsila dalam Pancasila sebagai Satu Kesatuan Utuh"</strong> dengan prestasi yang sangat gemilang dan membanggakan.
+            </p>
+
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:10px; gap:10px;">
+                <div style="display:flex; border:2px solid #E6C687; border-radius:8px; background:#FFFBEB; overflow:hidden; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+                    <div style="padding:6px 10px; border-right:1px solid #E6C687;">
+                        <div style="font-size:0.6rem; color:#78350F; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Total Skor</div>
+                        <div id="cert-score" style="font-size:1.1rem; font-weight:900; color:#92400E; margin-top:1px;">0</div>
+                    </div>
+                    <div style="padding:6px 10px;">
+                        <div style="font-size:0.6rem; color:#166534; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Akurasi</div>
+                        <div id="cert-acc" style="font-size:1.1rem; font-weight:900; color:#15803d; margin-top:1px;">100%</div>
+                    </div>
+                </div>
+
+                <div style="width:55px; height:55px; background:linear-gradient(135deg, #FDE047, #CA8A04); border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; border:3px solid #FEF08A; box-shadow:0 3px 6px rgba(0,0,0,0.2);">
+                    <span style="font-size:16px;">👑</span>
+                    <span style="font-size:6.5px; font-weight:900; color:#713f12; letter-spacing:0.5px; margin-top:-1px;">PRESTASI</span>
+                </div>
+
+                <div style="text-align:center; font-size:0.75rem; color:#1f2937;">
+                    <p id="cert-date-loc" style="margin:0 0 15px 0; color:#4b5563; font-weight:500;">Sendang Ayu, 22 September 2026</p>
+                    <p style="margin:0 0 22px 0; font-weight:700;">Guru Kelas,</p>
+                    <p style="margin:0; font-weight:900; text-decoration:underline; font-size:0.8rem; color:#111827;">Solehan, S.Pd.Gr.</p>
+                    <p style="margin:2px 0 0 0; font-size:0.65rem; color:#4b5563; font-weight:600;">NIP. 199006082025211035</p>
+                </div>
+            </div>
+            <div class="no-print" style="margin-top:20px; display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+                <button class="btn-green" style="padding:10px 18px; font-size:0.9rem; border-radius:8px;" onclick="downloadCertificateImage()">📥 DOWNLOAD FOTO (HD)</button>
+                <button class="btn-blue" style="padding:10px 18px; font-size:0.9rem; border-radius:8px;" onclick="downloadCertificatePDF()">📄 DOWNLOAD PDF</button>
+                <button class="btn-yellow" style="padding:10px 18px; font-size:0.9rem; border-radius:8px; color:#333;" onclick="showScreen('screen-menu')">🏠 MENU UTAMA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Screen: Pause -->
+    <div id="screen-pause" class="overlay" style="z-index: 15;">
+        <div class="panel" style="display:flex; flex-direction:column; align-items:center;">
+            <h2>PAUSED</h2>
+            <button class="btn-green" id="btn-resume">▶ LANJUTKAN</button>
+            <button class="btn-yellow" id="btn-toggle-sound-pause">🔊 SUARA: ON</button>
+            <button class="btn-blue" onclick="resetGame(); showScreen('screen-menu');">🏠 MENU UTAMA</button>
+        </div>
+    </div>
+
+    <!-- Screen: Material -->
+    <div id="screen-material" class="overlay">
+        <div class="panel" style="max-width: 600px; text-align:left;">
+            <h2 style="text-align:center;">Materi Pembelajaran</h2>
+            <div style="height: 60vh; overflow-y:auto; padding-right:10px;">
+                <div class="material-card">
+                    <h3 style="color:var(--red)">📖 Sejarah Pancasila</h3>
+                    <p>Pancasila adalah dasar negara Indonesia. Istilah "Pancasila" pertama kali dikemukakan oleh Ir. Soekarno pada sidang BPUPKI tanggal 1 Juni 1945.</p>
+                    <p><strong>Timeline Singkat:</strong><br>
+                    • 1 Juni 1945: Pidato Soekarno tentang dasar negara.<br>
+                    • 22 Juni 1945: Perumusan Piagam Jakarta oleh Panitia Sembilan.<br>
+                    • 18 Agustus 1945: Pancasila disahkan sebagai dasar negara oleh PPKI.</p>
+                </div>
+                <div class="material-card">
+                    <h3 style="color:var(--blue)">🤝 Tolong-Menolong</h3>
+                    <p>Tolong-menolong adalah sikap saling membantu sesama manusia. Ini mencerminkan <strong>Sila ke-2</strong> (Kemanusiaan yang Adil dan Beradab).</p>
+                    <p><strong>Contoh:</strong> Membantu teman yang jatuh, meminjamkan alat tulis, membantu ibu membersihkan rumah.</p>
+                </div>
+                <div class="material-card">
+                    <h3 style="color:var(--green)">👨‍👩‍👧‍👦 Gotong Royong</h3>
+                    <p>Gotong royong adalah bekerja bersama-sama untuk mencapai hasil yang didambakan. Ini merupakan jiwa dari <strong>Sila ke-3</strong> (Persatuan Indonesia) dan <strong>Sila ke-5</strong> (Keadilan Sosial).</p>
+                    <p><strong>Contoh:</strong> Membersihkan kelas bersama (piket), kerja bakti di lingkungan rumah.</p>
+                </div>
+            </div>
+            <button class="btn-blue no-print" onclick="showScreen('screen-menu')" style="width:100%; margin-top:10px;">KEMBALI</button>
+        </div>
+    </div>
+
+    <!-- Screen: Tutorial -->
+    <div id="screen-tutorial" class="overlay">
+        <div class="panel" style="text-align:left; display:flex; flex-direction:column; align-items:center;">
+            <h2 style="text-align:center;">Petunjuk Bermain</h2>
+            <ul style="line-height:1.8; margin-left:20px; margin-bottom:20px;">
+                <li>🚗 <strong>Kontrol:</strong> Mobil melaju otomatis. Gunakan D-Pad di layar atau keyboard A/D & panah untuk berbelok.</li>
+                <li>⚠️ <strong>Rintangan:</strong> Hindari rintangan jalan. Menabrak mengurangi 1 nyawa.</li>
+                <li>🪙 <strong>Bonus:</strong> Ambil Koin (+10) dan Bintang (+50) untuk skor ekstra.</li>
+                <li>📦 <strong>Kotak Pertanyaan:</strong> Tabrak kotak '?' untuk menjawab soal dan mendapat dorongan (Boost).</li>
+                <li>🏁 <strong>Tujuan:</strong> Jawab minimal 5 soal dengan benar untuk menyelesaikan level!</li>
+            </ul>
+            <button class="btn-blue" onclick="showScreen('screen-menu')">MENGERTI</button>
+        </div>
+    </div>
+
+    <!-- Screen: High Score -->
+    <div id="screen-highscore" class="overlay">
+        <div class="panel" style="display:flex; flex-direction:column; align-items:center;">
+            <h2>🏆 SKOR TERTINGGI</h2>
+            <div id="hs-list" style="margin:20px 0; font-size:1.2rem; line-height:2; width:100%; text-align:center;"></div>
+            <button class="btn-blue" onclick="showScreen('screen-menu')">KEMBALI</button>
+        </div>
+    </div>
+
+    <!-- Screen: About -->
+    <div id="screen-about" class="overlay">
+        <div class="panel" style="display:flex; flex-direction:column; align-items:center;">
+            <h2>Tentang Game</h2>
+            <h1 class="title" style="font-size:1.8rem; margin-bottom:20px;">BALAP PANCASILA</h1>
+            <p>Game edukasi interaktif untuk belajar sejarah Pancasila, tolong-menolong, dan gotong royong melalui permainan balap mobil.</p>
+            <p style="margin-top:15px; font-weight:bold; color:var(--blue);">Belajar • Bermain • Berkarakter</p>
+            <button class="btn-blue" style="margin-top:20px;" onclick="showScreen('screen-menu')">KEMBALI</button>
+        </div>
+    </div>
+
+    <!-- Screen: Settings -->
+    <div id="screen-settings" class="overlay">
+        <div class="panel" style="display:flex; flex-direction:column; align-items:center;">
+            <h2>Pengaturan</h2>
+            <button id="btn-toggle-sound" class="btn-yellow">🔊 SUARA: ON</button>
+            <button id="btn-reset-data" class="btn-red" style="background:var(--red);">⚠️ HAPUS DATA PEMAIN</button>
+            <button class="btn-blue" style="margin-top:20px;" onclick="showScreen('screen-menu')">KEMBALI</button>
+        </div>
+    </div>
+
+    <div id="landscape-prompt">
+        <h2>Mohon Putar Perangkat Anda</h2>
+        <p>Game ini lebih baik dimainkan dalam mode Landscape (Mendatar).</p>
+        <button style="max-width:200px; margin-top:20px;" onclick="document.getElementById('landscape-prompt').style.display='none'">Tutup</button>
+    </div>
+</div>
+
+<script>
+    const CONFIG = {
+        FPS: 60,
+        MAX_SPEED: 8,
+        ACCEL: 0.15,
+        ROAD_WIDTH: 0,
+        LANE_COUNT: 3
+    };
+
+    let GAME = {
+        state: 'start',
+        level: 1,
+        score: 0,
+        coins: 0,
+        lives: 3,
+        speed: 0,
+        distance: 0,
+        maxDistance: 10000,
+        correctAnswers: 0,
+        wrongAnswers: 0,
+        carColor: 'red',
+        soundOn: true,
+        playerName: 'Pemain',
+        levelCorrectCount: 0
+    };
+
+    let ENTITIES = {
+        obstacles: [],
+        items: [],
+        particles: []
+    };
+
+    const KEYS = { ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false, w:false, a:false, s:false, d:false, ' ':false };
+
+    const STORAGE_KEY = 'balapPancasila_data';
+    let saveData = { name: '', highScore: 0, unlockedLevel: 1, sound: true, coinsTotal: 0, wins: 0 };
+
+    function loadData() {
+        try {
+            const data = localStorage.getItem(STORAGE_KEY);
+            if(data) {
+                saveData = JSON.parse(data);
+                GAME.soundOn = saveData.sound;
+            }
+        } catch(e) { console.warn("LocalStorage not available"); }
+    }
+    
+    function saveToLocal() {
+        try {
+            saveData.sound = GAME.soundOn;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+        } catch(e) {}
+    }
+
+    const QUESTION_BANK = [];
+    let qId = 1;
+    function addQ(cat, diff, q, opts, ansIdx, exp) {
+        QUESTION_BANK.push({ id: qId++, category: cat, difficulty: diff, type: 'multiple-choice', question: q, options: opts, answer: ansIdx, explanation: exp });
+    }
+
+    // Category 1: Sejarah Pancasila
+    const C1 = "Sejarah Pancasila";
+    addQ(C1, 1, "Siapakah tokoh yang pertama kali mengemukakan istilah Pancasila?", ["Mohammad Yamin", "Ir. Soekarno", "Soepomo", "Mohammad Hatta"], 1, "Ir. Soekarno mengemukakan istilah Pancasila pada pidatonya tanggal 1 Juni 1945.");
+    addQ(C1, 1, "Kapan Hari Lahir Pancasila diperingati?", ["17 Agustus", "1 Juni", "18 Agustus", "10 November"], 1, "1 Juni diperingati sebagai Hari Lahir Pancasila.");
+    addQ(C1, 1, "Badan yang bertugas menyelidiki usaha persiapan kemerdekaan adalah...", ["PPKI", "KNIP", "BPUPKI", "Panitia Sembilan"], 2, "BPUPKI dibentuk untuk mempersiapkan kemerdekaan.");
+    addQ(C1, 1, "Pancasila disahkan sebagai dasar negara pada tanggal...", ["1 Juni 1945", "17 Agustus 1945", "18 Agustus 1945", "22 Juni 1945"], 2, "PPKI mengesahkan Pancasila pada 18 Agustus 1945.");
+    addQ(C1, 1, "Lambang negara Indonesia adalah...", ["Pohon Beringin", "Bintang Emas", "Burung Garuda", "Bendera Merah Putih"], 2, "Garuda Pancasila adalah lambang negara Indonesia.");
+    addQ(C1, 1, "Sila pertama Pancasila dilambangkan dengan...", ["Bintang", "Rantai", "Pohon Beringin", "Kepala Banteng"], 0, "Bintang emas melambangkan Ketuhanan Yang Maha Esa.");
+    addQ(C1, 1, "Bunyi sila ketiga Pancasila adalah...", ["Kemanusiaan yang adil dan beradab", "Persatuan Indonesia", "Keadilan sosial", "Ketuhanan Yang Maha Esa"], 1, "Persatuan Indonesia adalah bunyi Sila ke-3.");
+    addQ(C1, 2, "Tokoh berikut yang BUKAN pengusul rumusan dasar negara adalah...", ["Ir. Soekarno", "Mohammad Yamin", "Jenderal Sudirman", "Prof. Dr. Soepomo"], 2, "Jenderal Sudirman adalah pahlawan nasional bidang militer.");
+    addQ(C1, 2, "Panitia kecil yang merumuskan Piagam Jakarta beranggotakan berapa orang?", ["7 orang", "9 orang", "11 orang", "21 orang"], 1, "Panitia Sembilan beranggotakan 9 orang.");
+    addQ(C1, 2, "Piagam Jakarta dirumuskan pada tanggal...", ["1 Juni 1945", "22 Juni 1945", "17 Agustus 1945", "18 Agustus 1945"], 1, "Piagam Jakarta dihasilkan pada 22 Juni 1945.");
+    for(let i=11; i<=40; i++) addQ(C1, i%3+1, `Soal Sejarah Pancasila variasi ke-${i}. Tokoh proklamator kemerdekaan RI adalah...`, ["Moh Hatta", "Ir. Soekarno & Moh. Hatta", "Sutan Syahrir", "Soepomo"], 1, "Ir. Soekarno dan Moh. Hatta adalah Proklamator RI.");
+
+    // Category 2: Tolong-Menolong
+    const C2 = "Tolong-Menolong";
+    addQ(C2, 1, "Melihat teman terjatuh saat berlari, sikap kita sebaiknya...", ["Menertawakan", "Meninggalkan", "Menolongnya", "Pura-pura tidak lihat"], 2, "Menolong sesama cerminan Sila ke-2.");
+    addQ(C2, 1, "Tolong-menolong mencerminkan pengamalan Pancasila sila ke...", ["Satu", "Dua", "Tiga", "Empat"], 1, "Sila ke-2 mengajarkan kemanusiaan yang adil dan beradab.");
+    addQ(C2, 1, "Manfaat saling tolong-menolong adalah...", ["Pekerjaan menjadi berat", "Menimbulkan pertengkaran", "Pekerjaan cepat selesai & ringan", "Membuang waktu"], 2, "Bantuan meringankan beban pekerjaan.");
+    addQ(C2, 2, "Saat ibu sedang sibuk memasak, sikap anak yang baik adalah...", ["Main game", "Tidur", "Menonton TV", "Membantu ibu menyiapkan alat makan"], 3, "Membantu orang tua adalah bentuk tolong-menolong di rumah.");
+    addQ(C2, 2, "Temanmu lupa membawa pensil saat ulangan. Apa yang kamu lakukan?", ["Meminjamkan pensil cadangan", "Membiarkannya", "Mengejeknya", "Menyuruhnya pulang"], 0, "Sikap peduli dan meminjamkan alat tulis.");
+    addQ(C2, 1, "Tolong-menolong harus dilakukan dengan perasaan...", ["Terpaksa", "Ikhlas", "Mengharap imbalan", "Sombong"], 1, "Menolong dengan ikhlas bernilai luhur.");
+    for(let i=7; i<=30; i++) addQ(C2, i%3+1, `Soal Tolong-Menolong situasi ${i}. Membantu orang lain yang kesulitan harus didasari rasa...`, ["Pamrih", "Ikhlas dan tulus", "Terpaksa", "Takut"], 1, "Ketulusan adalah kunci utama tolong-menolong.");
+
+    // Category 3: Gotong Royong
+    const C3 = "Gotong Royong";
+    addQ(C3, 1, "Kegiatan bekerja bersama-sama untuk mencapai tujuan disebut...", ["Berkompetisi", "Gotong royong", "Bermalas-malasan", "Berdebat"], 1, "Gotong royong adalah budaya bangsa.");
+    addQ(C3, 1, "Gotong royong mencerminkan sila ke berapa dalam Pancasila?", ["Sila 1", "Sila 2", "Sila 3 (Persatuan Indonesia)", "Sila 4"], 2, "Persatuan Indonesia diwujudkan lewat gotong royong.");
+    addQ(C3, 1, "Contoh gotong royong di lingkungan sekolah adalah...", ["Mengerjakan ulangan bersama", "Piket membersihkan kelas", "Bolos sekolah bersama", "Bermain game"], 1, "Piket kelas adalah gotong royong sekolah.");
+    addQ(C3, 2, "Kerja bakti membersihkan selokan desa adalah contoh gotong royong di lingkungan...", ["Sekolah", "Keluarga", "Masyarakat", "Negara"], 2, "Lingkungan masyarakat sekitar rumah.");
+    for(let i=5; i<=30; i++) addQ(C3, i%3+1, `Soal Gotong Royong skenario ${i}. Manfaat gotong royong bagi warga desa adalah...`, ["Membuat warga terpecah", "Membuat pekerjaan berat jadi ringan dan rukun", "Membuang waktu", "Menambah masalah"], 1, "Gotong royong merekatkan kerukunan.");
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let engineOsc = null;
+    let engineGain = null;
+
+    function playTone(freq, type, duration, vol=0.1) {
+        if(!GAME.soundOn || audioCtx.state === 'suspended') return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function playSound(name) {
+        if(!GAME.soundOn) return;
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        
+        switch(name) {
+            case 'coin':
+                playTone(1200, 'sine', 0.1, 0.2);
+                setTimeout(()=> playTone(1600, 'sine', 0.2, 0.2), 100);
+                break;
+            case 'star':
+                playTone(800, 'sine', 0.1, 0.2);
+                setTimeout(()=> playTone(1200, 'sine', 0.1, 0.2), 100);
+                setTimeout(()=> playTone(1600, 'sine', 0.3, 0.2), 200);
+                break;
+            case 'crash':
+                playTone(100, 'square', 0.3, 0.3);
+                playTone(50, 'sawtooth', 0.4, 0.4);
+                break;
+            case 'correct':
+                playTone(400, 'square', 0.1, 0.1);
+                setTimeout(()=> playTone(600, 'square', 0.1, 0.1), 100);
+                setTimeout(()=> playTone(800, 'square', 0.2, 0.1), 200);
+                break;
+            case 'wrong':
+                playTone(300, 'sawtooth', 0.2, 0.2);
+                setTimeout(()=> playTone(200, 'sawtooth', 0.3, 0.2), 200);
+                break;
+            case 'click':
+                playTone(600, 'sine', 0.05, 0.1);
+                break;
+        }
+    }
+
+    function initEngineSound() {
+        if(!GAME.soundOn) return;
+        if(engineOsc) return;
+        try {
+            engineOsc = audioCtx.createOscillator();
+            engineGain = audioCtx.createGain();
+            engineOsc.type = 'sawtooth';
+            engineOsc.frequency.value = 50;
+            engineGain.gain.value = 0;
+            engineOsc.connect(engineGain);
+            engineGain.connect(audioCtx.destination);
+            engineOsc.start();
+        } catch(e) {}
+    }
+    
+    function updateEngineSound() {
+        if(engineOsc && engineGain) {
+            if(GAME.state === 'playing' && GAME.soundOn) {
+                const targetFreq = 50 + (GAME.speed * 10);
+                engineOsc.frequency.setTargetAtTime(targetFreq, audioCtx.currentTime, 0.1);
+                engineGain.gain.setTargetAtTime(0.05 + (GAME.speed*0.005), audioCtx.currentTime, 0.1);
+            } else {
+                engineGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+            }
+        }
+    }
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        CONFIG.ROAD_WIDTH = Math.min(canvas.width * 0.8, 500);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    
+    class Player {
+        constructor() {
+            this.width = 40;
+            this.height = 70;
+            this.x = canvas.width/2 - this.width/2;
+            this.y = canvas.height - this.height - 150;
+            this.vx = 0;
+            this.targetX = this.x;
+            this.boosting = false;
+            this.boostTimer = 0;
+            this.invulnerable = false;
+            this.invulnTimer = 0;
+            this.colors = { red: '#E62020', blue: '#2196F3', yellow: '#FFC107', green: '#4CAF50' };
+        }
+        
+        update(dt) {
+            if(KEYS.ArrowLeft || KEYS.a) this.vx -= 1;
+            if(KEYS.ArrowRight || KEYS.d) this.vx += 1;
+            
+            if(Math.abs(this.targetX - this.x) > 5) {
+                this.vx += (this.targetX > this.x) ? 0.5 : -0.5;
+            } else {
+                this.targetX = this.x;
+            }
+            
+            this.vx *= 0.8;
+            this.x += this.vx;
+            
+            const leftEdge = (canvas.width - CONFIG.ROAD_WIDTH) / 2;
+            const rightEdge = leftEdge + CONFIG.ROAD_WIDTH - this.width;
+            if(this.x < leftEdge) { this.x = leftEdge; this.vx = 0; }
+            if(this.x > rightEdge) { this.x = rightEdge; this.vx = 0; }
+
+            let maxS = CONFIG.MAX_SPEED;
+            if(this.boosting) maxS *= 1.5;
+            
+            if ((KEYS.ArrowDown || KEYS.s) && GAME.speed > 0) {
+                GAME.speed -= CONFIG.ACCEL * 2;
+            } else if (GAME.speed < maxS) {
+                GAME.speed += CONFIG.ACCEL;
+            }
+            
+            if(GAME.speed < 0) GAME.speed = 0;
+            if(GAME.speed > maxS) GAME.speed -= 0.5;
+
+            if(this.boostTimer > 0) {
+                this.boostTimer -= dt;
+                this.boosting = true;
+                if(this.boostTimer <= 0) this.boosting = false;
+            }
+            if(this.invulnTimer > 0) {
+                this.invulnTimer -= dt;
+                this.invulnerable = (Math.floor(Date.now() / 100) % 2 === 0);
+            } else {
+                this.invulnerable = false;
+            }
+            
+            GAME.distance += GAME.speed * (dt/16);
+            updateHUD();
+        }
+        
+        draw(ctx) {
+            if(this.invulnTimer > 0 && !this.invulnerable) return;
+            
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            
+            ctx.fillStyle = this.colors[GAME.carColor] || this.colors.red;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, this.width, this.height, 10);
+            ctx.fill();
+            
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.roundRect(5, 15, this.width-10, this.height-30, 5);
+            ctx.fill();
+            ctx.fillStyle = '#87CEEB';
+            ctx.beginPath();
+            ctx.roundRect(8, 18, this.width-16, this.height-36, 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'yellow';
+            ctx.fillRect(5, 0, 8, 5);
+            ctx.fillRect(this.width-13, 0, 8, 5);
+            ctx.fillStyle = 'red';
+            ctx.fillRect(5, this.height-5, 8, 5);
+            ctx.fillRect(this.width-13, this.height-5, 8, 5);
+            
+            ctx.fillStyle = '#111';
+            ctx.fillRect(-3, 10, 4, 15);
+            ctx.fillRect(this.width-1, 10, 4, 15);
+            ctx.fillRect(-3, this.height-25, 4, 15);
+            ctx.fillRect(this.width-1, this.height-25, 4, 15);
+
+            if(this.boosting) {
+                ctx.fillStyle = 'orange';
+                ctx.beginPath();
+                ctx.moveTo(10, this.height);
+                ctx.lineTo(this.width/2, this.height + Math.random()*25 + 15);
+                ctx.lineTo(this.width-10, this.height);
+                ctx.fill();
+            }
+            
+            ctx.restore();
+        }
+    }
+
+    let player = new Player();
+
+    class Entity {
+        constructor(type, x) {
+            this.type = type;
+            this.width = 40;
+            this.height = 40;
+            this.x = x;
+            this.y = -50;
+            this.active = true;
+            
+            if(type === 'question') { this.width = 50; this.height = 50; }
+            if(type === 'coin') { this.width = 25; this.height = 25; }
+            if(type === 'star') { this.width = 30; this.height = 30; }
+        }
+        
+        update(dt) {
+            this.y += GAME.speed * (dt/16);
+            if(this.y > canvas.height + 50) this.active = false;
+        }
+        
+        draw(ctx) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            if(this.type === 'obstacle') {
+                ctx.fillStyle = '#D32F2F';
+                ctx.beginPath(); ctx.ellipse(20, 36, 16, 4, 0, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#F44336';
+                ctx.beginPath(); ctx.moveTo(20, 4); ctx.lineTo(32, 34); ctx.lineTo(8, 34); ctx.fill();
+                ctx.fillStyle = '#FFF';
+                ctx.beginPath(); ctx.moveTo(16, 14); ctx.lineTo(24, 14); ctx.lineTo(26, 20); ctx.lineTo(14, 20); ctx.fill();
+            } else if(this.type === 'coin') {
+                ctx.fillStyle = '#FFB300';
+                ctx.beginPath(); ctx.arc(12.5, 12.5, 12.5, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#E65100';
+                ctx.font = 'bold 10px Arial';
+                ctx.fillText('10', 6, 16);
+            } else if(this.type === 'star') {
+                ctx.fillStyle = '#FFEB3B';
+                ctx.beginPath();
+                for(let i=0; i<5; i++) {
+                    ctx.lineTo(15 + 15*Math.cos((18+i*72)*Math.PI/180), 15 - 15*Math.sin((18+i*72)*Math.PI/180));
+                    ctx.lineTo(15 + 6*Math.cos((54+i*72)*Math.PI/180), 15 - 6*Math.sin((54+i*72)*Math.PI/180));
+                }
+                ctx.closePath();
+                ctx.fill();
+            } else if(this.type === 'question') {
+                ctx.fillStyle = '#9C27B0';
+                ctx.beginPath(); ctx.roundRect(0, 0, this.width, this.height, 12); ctx.fill();
+                ctx.fillStyle = '#FFEB3B';
+                ctx.font = 'bold 36px sans-serif';
+                ctx.fillText('?', 14, 38);
+            }
+            ctx.restore();
+        }
+    }
+
+    class Particle {
+        constructor(x, y, color) {
+            this.x = x; this.y = y;
+            this.vx = (Math.random() - 0.5) * 10;
+            this.vy = (Math.random() - 0.5) * 10;
+            this.life = 1.0;
+            this.color = color;
+            this.size = Math.random() * 5 + 2;
+        }
+        update(dt) {
+            this.x += this.vx; this.y += this.vy;
+            this.life -= 0.02 * (dt/16);
+        }
+        draw(ctx) {
+            ctx.globalAlpha = this.life;
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.size, this.size);
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    let lastTime = 0;
+    let spawnTimer = 0;
+    let bgOffset = 0;
+
+    function resetGameLogic(level) {
+        GAME.level = level;
+        GAME.score = 0;
+        GAME.coins = 0;
+        GAME.lives = 3;
+        GAME.speed = 0;
+        GAME.distance = 0;
+        GAME.correctAnswers = 0;
+        GAME.wrongAnswers = 0;
+        GAME.levelCorrectCount = 0;
+        
+        if(level === 1) { CONFIG.MAX_SPEED = 6; }
+        else if(level === 2) { CONFIG.MAX_SPEED = 9; }
+        else if(level === 3) { CONFIG.MAX_SPEED = 12; }
+
+        player = new Player();
+        ENTITIES.items = [];
+        ENTITIES.particles = [];
+        ENTITIES.obstacles = [];
+        
+        resizeCanvas();
+        updateHUD();
+        document.getElementById('progress-bar').style.width = '0%';
+        document.getElementById('progress-text').innerText = 'Soal: 0/5';
+    }
+
+    function spawnEntities() {
+        if(GAME.speed < 2) return;
+        spawnTimer++;
+        const spawnRate = 60 - (GAME.level * 10);
+        
+        if(spawnTimer > spawnRate) {
+            spawnTimer = 0;
+            const leftEdge = (canvas.width - CONFIG.ROAD_WIDTH) / 2;
+            const laneWidth = CONFIG.ROAD_WIDTH / 3;
+            const lane = Math.floor(Math.random() * 3);
+            const x = leftEdge + (lane * laneWidth) + (laneWidth/2) - 20;
+
+            const rand = Math.random();
+            if(rand < 0.15) {
+                ENTITIES.items.push(new Entity('question', x));
+            } else if (rand < 0.4) {
+                ENTITIES.items.push(new Entity(Math.random() > 0.8 ? 'star' : 'coin', x));
+            } else {
+                ENTITIES.obstacles.push(new Entity('obstacle', x));
+            }
+        }
+    }
+
+    function checkCollisions() {
+        if(player.invulnTimer > 0) return;
+        const px = player.x; const py = player.y; const pw = player.width; const ph = player.height;
+
+        for(let i=0; i<ENTITIES.obstacles.length; i++) {
+            let obs = ENTITIES.obstacles[i];
+            if(obs.active && px < obs.x + obs.width && px + pw > obs.x && py < obs.y + obs.height && py + ph > obs.y) {
+                playSound('crash');
+                GAME.lives--;
+                GAME.score = Math.max(0, GAME.score - 25);
+                GAME.speed = 0;
+                player.invulnTimer = 2000;
+                obs.active = false;
+                if(GAME.lives <= 0) gameOver();
+                updateHUD();
+                return;
+            }
+        }
+
+        for(let i=0; i<ENTITIES.items.length; i++) {
+            let item = ENTITIES.items[i];
+            if(item.active && px < item.x + item.width && px + pw > item.x && py < item.y + item.height && py + ph > item.y) {
+                item.active = false;
+                if(item.type === 'coin') {
+                    playSound('coin');
+                    GAME.coins++;
+                    GAME.score += 10;
+                } else if(item.type === 'star') {
+                    playSound('star');
+                    GAME.score += 50;
+                } else if(item.type === 'question') {
+                    triggerQuestion();
+                }
+                updateHUD();
+            }
+        }
+    }
+
+    function drawBackground() {
+        ctx.fillStyle = '#4CAF50';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        const leftEdge = (canvas.width - CONFIG.ROAD_WIDTH) / 2;
+        
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(leftEdge - 10, 0, 10, canvas.height);
+        ctx.fillRect(leftEdge + CONFIG.ROAD_WIDTH, 0, 10, canvas.height);
+        
+        ctx.fillStyle = '#555';
+        ctx.fillRect(leftEdge, 0, CONFIG.ROAD_WIDTH, canvas.height);
+
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 10;
+        ctx.setLineDash([40, 40]);
+        bgOffset += GAME.speed;
+        if(bgOffset > 80) bgOffset = 0;
+        
+        ctx.beginPath();
+        for(let l=1; l<CONFIG.LANE_COUNT; l++) {
+            let lineX = leftEdge + (CONFIG.ROAD_WIDTH / CONFIG.LANE_COUNT) * l;
+            ctx.moveTo(lineX, -bgOffset);
+            ctx.lineTo(lineX, canvas.height);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    function gameLoop(timestamp) {
+        if(!lastTime) lastTime = timestamp;
+        const dt = timestamp - lastTime;
+        lastTime = timestamp;
+
+        if(GAME.state === 'playing') {
+            updateEngineSound();
+            player.update(dt);
+            spawnEntities();
+            
+            ENTITIES.obstacles.forEach(e => e.update(dt));
+            ENTITIES.items.forEach(e => e.update(dt));
+            ENTITIES.particles.forEach(p => p.update(dt));
+            
+            ENTITIES.obstacles = ENTITIES.obstacles.filter(e => e.active);
+            ENTITIES.items = ENTITIES.items.filter(e => e.active);
+            ENTITIES.particles = ENTITIES.particles.filter(p => p.life > 0);
+            
+            checkCollisions();
+            
+            let questionProg = Math.min(100, Math.floor((GAME.levelCorrectCount / 5) * 100));
+            document.getElementById('progress-bar').style.width = questionProg + '%';
+            document.getElementById('progress-text').innerText = `Soal: ${GAME.levelCorrectCount}/5`;
+            
+            if(GAME.levelCorrectCount >= 5) {
+                victory();
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBackground();
+            
+            ENTITIES.items.forEach(e => e.draw(ctx));
+            ENTITIES.obstacles.forEach(e => e.draw(ctx));
+            ENTITIES.particles.forEach(p => p.draw(ctx));
+            player.draw(ctx);
+        }
+
+        if(GAME.state !== 'paused' && GAME.state !== 'question') {
+            requestAnimationFrame(gameLoop);
+        }
+    }
+
+    let currentQuestion = null;
+    let questionTimer = 0;
+    let qInterval = null;
+
+    function getRandomQuestion() {
+        const validQs = QUESTION_BANK.filter(q => q.difficulty <= GAME.level || GAME.level === 3);
+        return validQs[Math.floor(Math.random() * validQs.length)];
+    }
+
+    function triggerQuestion() {
+        playSound('click');
+        GAME.state = 'question';
+        GAME.speed = 0;
+        updateEngineSound();
+        
+        currentQuestion = getRandomQuestion();
+        
+        document.getElementById('q-text').innerText = `[${currentQuestion.category}] ${currentQuestion.question}`;
+        const optsContainer = document.getElementById('q-options');
+        optsContainer.innerHTML = '';
+        
+        currentQuestion.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span>${String.fromCharCode(65+idx)}. ${opt}</span>`;
+            btn.onclick = () => handleAnswer(idx, btn);
+            optsContainer.appendChild(btn);
+        });
+
+        document.getElementById('q-feedback').style.display = 'none';
+        document.getElementById('btn-next-q').style.display = 'none';
+        showScreen('screen-question');
+        
+        questionTimer = GAME.level === 1 ? 20 : (GAME.level === 2 ? 15 : 10);
+        document.getElementById('timer-box').innerText = questionTimer;
+        
+        clearInterval(qInterval);
+        qInterval = setInterval(() => {
+            questionTimer--;
+            document.getElementById('timer-box').innerText = questionTimer;
+            if(questionTimer <= 0) {
+                clearInterval(qInterval);
+                handleAnswer(-1, null);
+            }
+        }, 1000);
+    }
+
+    function handleAnswer(selectedIdx, btnElement) {
+        clearInterval(qInterval);
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => { b.disabled = true; b.style.pointerEvents = 'none'; });
+        
+        const feedback = document.getElementById('q-feedback');
+        feedback.style.display = 'block';
+        document.getElementById('btn-next-q').style.display = 'block';
+        
+        if(btns[currentQuestion.answer]) btns[currentQuestion.answer].classList.add('correct');
+        
+        if(selectedIdx === currentQuestion.answer) {
+            playSound('correct');
+            feedback.className = 'feedback-box success';
+            feedback.innerHTML = `✅ BENAR!<br><small>${currentQuestion.explanation}</small>`;
+            GAME.score += 100;
+            GAME.correctAnswers++;
+            GAME.levelCorrectCount++;
+            player.boostTimer = 3000;
+        } else {
+            playSound('wrong');
+            if(btnElement) btnElement.classList.add('wrong');
+            feedback.className = 'feedback-box error';
+            feedback.innerHTML = `❌ BELUM TEPAT.<br><small>${currentQuestion.explanation}</small>`;
+            GAME.score = Math.max(0, GAME.score - 25);
+            GAME.wrongAnswers++;
+            GAME.lives--;
+            if(GAME.lives <= 0) {
+                document.getElementById('btn-next-q').innerText = "LIHAT HASIL";
+            }
+        }
+        updateHUD();
+    }
+
+    document.getElementById('btn-next-q').onclick = () => {
+        playSound('click');
+        if(GAME.lives <= 0) {
+            gameOver();
+        } else {
+            GAME.state = 'playing';
+            showScreen('');
+            lastTime = performance.now();
+            requestAnimationFrame(gameLoop);
+        }
+    };
+
+    function showScreen(id) {
+        document.querySelectorAll('.overlay').forEach(el => el.classList.remove('active'));
+        if(id) {
+            const screen = document.getElementById(id);
+            if(screen) screen.classList.add('active');
+        }
+        
+        const isPlaying = (id === '' || id === 'screen-pause' || id === 'screen-question');
+        document.getElementById('hud').style.display = isPlaying ? 'flex' : 'none';
+        document.getElementById('progress-container').style.display = isPlaying ? 'block' : 'none';
+        document.getElementById('pause-btn').style.display = (id === '') ? 'block' : 'none';
+        document.getElementById('mobile-controls').style.display = isPlaying ? 'flex' : 'none';
+    }
+
+    function updateHUD() {
+        document.getElementById('hud-lives').innerText = '❤️'.repeat(Math.max(0, GAME.lives));
+        document.getElementById('hud-score').innerText = GAME.score;
+        document.getElementById('hud-coins').innerText = GAME.coins;
+        document.getElementById('hud-speed').innerText = Math.floor(GAME.speed * 10);
+    }
+
+    function saveHighScore() {
+        if(GAME.score > saveData.highScore) saveData.highScore = GAME.score;
+        saveData.coinsTotal += GAME.coins;
+        saveToLocal();
+    }
+
+    function gameOver() {
+        GAME.state = 'gameover';
+        updateEngineSound();
+        playSound('wrong');
+        saveHighScore();
+        
+        document.getElementById('go-score').innerText = GAME.score;
+        document.getElementById('go-coins').innerText = GAME.coins;
+        document.getElementById('go-correct').innerText = GAME.correctAnswers;
+        document.getElementById('go-wrong').innerText = GAME.wrongAnswers;
+        
+        showScreen('screen-gameover');
+    }
+
+    function victory() {
+        GAME.state = 'victory';
+        updateEngineSound();
+        playSound('star');
+        saveData.wins++;
+        if(GAME.level >= saveData.unlockedLevel && GAME.level < 3) {
+            saveData.unlockedLevel = GAME.level + 1;
+        }
+        saveHighScore();
+        
+        document.getElementById('vic-score').innerText = GAME.score;
+        document.getElementById('vic-coins').innerText = GAME.coins;
+        document.getElementById('vic-correct').innerText = GAME.correctAnswers;
+        
+        const totalQ = GAME.correctAnswers + GAME.wrongAnswers;
+        const acc = totalQ > 0 ? Math.floor((GAME.correctAnswers/totalQ)*100) : 0;
+        document.getElementById('vic-acc').innerText = acc + '%';
+        
+        let stars = 1;
+        if(acc >= 70 && GAME.score > 500) stars = 2;
+        if(acc >= 90 && GAME.score > 1000) stars = 3;
+        
+        document.getElementById('star-1').className = stars >= 1 ? 'star earned' : 'star';
+        document.getElementById('star-2').className = stars >= 2 ? 'star earned' : 'star';
+        document.getElementById('star-3').className = stars >= 3 ? 'star earned' : 'star';
+
+        document.getElementById('cert-name').innerText = GAME.playerName;
+        document.getElementById('cert-score').innerText = GAME.score;
+        document.getElementById('cert-acc').innerText = acc + '%';
+        
+        let d = new Date();
+        const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        document.getElementById('cert-date-loc').innerText = `Sendang Ayu, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+        
+        showScreen('screen-victory');
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if(KEYS.hasOwnProperty(e.key)) KEYS[e.key] = true;
+        if(e.key.toLowerCase() === 'a') KEYS.a = true;
+        if(e.key.toLowerCase() === 'd') KEYS.d = true;
+        if(e.key.toLowerCase() === 's') KEYS.s = true;
+        if(e.key === 'Escape' && GAME.state === 'playing') document.getElementById('pause-btn').click();
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if(KEYS.hasOwnProperty(e.key)) KEYS[e.key] = false;
+        if(e.key.toLowerCase() === 'a') KEYS.a = false;
+        if(e.key.toLowerCase() === 'd') KEYS.d = false;
+        if(e.key.toLowerCase() === 's') KEYS.s = false;
+    });
+
+    const bindBtn = (id, key) => {
+        const el = document.getElementById(id);
+        if(!el) return;
+        const pressOn = (e)=>{ e.preventDefault(); KEYS[key] = true; el.classList.add('pressed'); };
+        const pressOff = (e)=>{ e.preventDefault(); KEYS[key] = false; el.classList.remove('pressed'); };
+        
+        el.addEventListener('touchstart', pressOn, {passive: false});
+        el.addEventListener('touchend', pressOff, {passive: false});
+        el.addEventListener('mousedown', pressOn);
+        el.addEventListener('mouseup', pressOff);
+        el.addEventListener('mouseleave', pressOff);
+    };
+    bindBtn('btn-up', 'ArrowUp');
+    bindBtn('btn-down', 'ArrowDown');
+    bindBtn('btn-left', 'ArrowLeft');
+    bindBtn('btn-right', 'ArrowRight');
+    bindBtn('btn-boost', ' ');
+
+    canvas.addEventListener('touchmove', (e) => {
+        if(GAME.state === 'playing') {
+            const touchX = e.touches[0].clientX;
+            const rect = canvas.getBoundingClientRect();
+            player.targetX = (touchX - rect.left) - player.width/2;
+        }
+    }, {passive: true});
+
+    document.querySelectorAll('.car-opt').forEach(opt => {
+        opt.onclick = () => {
+            playSound('click');
+            document.querySelectorAll('.car-opt').forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            GAME.carColor = opt.dataset.color;
+        };
+    });
+
+    document.getElementById('btn-save-name').onclick = () => {
+        playSound('click');
+        const name = document.getElementById('player-name').value.trim();
+        GAME.playerName = name || 'Pemain';
+        saveData.name = GAME.playerName;
+        saveToLocal();
+        initEngineSound();
+        
+        document.getElementById('welcome-text').innerText = `Halo, ${GAME.playerName}!`;
+        showScreen('screen-menu');
+    };
+
+    // Navigasi dari Layar Cover ke Layar Input Nama
+    document.getElementById('btn-cover-start').onclick = () => {
+        playSound('click');
+        showScreen('screen-start');
+    };
+
+    // Tombol Layar Penuh (Fullscreen)
+    document.getElementById('btn-fullscreen').onclick = () => {
+        playSound('click');
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.warn("Error attempting to enable fullscreen:", err);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    };
+
+    document.getElementById('menu-play').onclick = () => { playSound('click'); showScreen('screen-levels'); };
+    document.getElementById('menu-material').onclick = () => { playSound('click'); showScreen('screen-material'); };
+    document.getElementById('menu-tutorial').onclick = () => { playSound('click'); showScreen('screen-tutorial'); };
+    document.getElementById('menu-about').onclick = () => { playSound('click'); showScreen('screen-about'); };
+    
+    document.getElementById('menu-highscore').onclick = () => { 
+        playSound('click');
+        const hsList = document.getElementById('hs-list');
+        hsList.innerHTML = `
+            <div>Pemain: <strong>${saveData.name || '-'}</strong></div>
+            <div>Skor Tertinggi: <strong style="color:var(--green)">${saveData.highScore}</strong></div>
+            <div>Total Koin: <strong style="color:var(--yellow)">${saveData.coinsTotal}</strong></div>
+            <div>Level Terbuka: <strong>${saveData.unlockedLevel}</strong></div>
+        `;
+        showScreen('screen-highscore'); 
+    };
+
+    document.getElementById('menu-settings').onclick = () => {
+        playSound('click');
+        document.getElementById('btn-toggle-sound').innerText = GAME.soundOn ? '🔊 SUARA: ON' : '🔇 SUARA: OFF';
+        showScreen('screen-settings');
+    };
+
+    document.getElementById('lvl-1').onclick = () => { startGame(1); };
+    document.getElementById('lvl-2').onclick = () => { 
+        if(saveData.unlockedLevel >= 2) startGame(2); 
+        else alert("Selesaikan Level 1 terlebih dahulu!");
+    };
+    document.getElementById('lvl-3').onclick = () => { 
+        if(saveData.unlockedLevel >= 3) startGame(3); 
+        else alert("Selesaikan Level 2 terlebih dahulu!");
+    };
+
+    function startGame(level) {
+        playSound('click');
+        resetGameLogic(level);
+        GAME.state = 'playing';
+        showScreen('');
+        lastTime = performance.now();
+        requestAnimationFrame(gameLoop);
+    }
+
+    document.getElementById('pause-btn').onclick = (e) => {
+        e.stopPropagation();
+        if(GAME.state === 'playing') {
+            playSound('click');
+            GAME.state = 'paused';
+            updateEngineSound();
+            document.getElementById('btn-toggle-sound-pause').innerText = GAME.soundOn ? '🔊 SUARA: ON' : '🔇 SUARA: OFF';
+            showScreen('screen-pause');
+        }
+    };
+    
+    document.getElementById('btn-resume').onclick = () => {
+        playSound('click');
+        GAME.state = 'playing';
+        showScreen('');
+        lastTime = performance.now();
+        requestAnimationFrame(gameLoop);
+    };
+
+    document.getElementById('btn-restart-go').onclick = () => { playSound('click'); startGame(GAME.level); };
+    document.getElementById('btn-next-level').onclick = () => { 
+        playSound('click');
+        if(GAME.level < 3) startGame(GAME.level + 1);
+        else showScreen('screen-menu');
+    };
+    document.getElementById('btn-cert').onclick = () => { 
+        playSound('click'); 
+        document.querySelectorAll('.overlay').forEach(el => el.classList.remove('active'));
+        document.getElementById('screen-cert').classList.add('active');
+    };
+
+    function downloadCertificateImage() {
+        playSound('click');
+        const certPanel = document.getElementById('certificate-panel');
+        const actionButtons = certPanel.querySelector('.no-print');
+        if(actionButtons) actionButtons.style.display = 'none';
+
+        // A4 Landscape dimensions at high resolution (300 DPI: 3508 x 2480 pixels)
+        const targetWidth = 3508;
+        const targetHeight = 2480;
+        const originalWidth = certPanel.offsetWidth;
+
+        html2canvas(certPanel, {
+            scale: 3,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#FFFDF5',
+            width: originalWidth,
+            windowWidth: document.documentElement.clientWidth
+        }).then(canvas => {
+            if(actionButtons) actionButtons.style.display = 'flex';
+            
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = targetWidth;
+            finalCanvas.height = targetHeight;
+            const ctxFinal = finalCanvas.getContext('2d');
+            
+            ctxFinal.fillStyle = '#FFFDF5';
+            ctxFinal.fillRect(0, 0, targetWidth, targetHeight);
+            
+            const hRatio = targetWidth / canvas.width;
+            const vRatio = targetHeight / canvas.height;
+            const ratio = Math.min(hRatio, vRatio);
+            
+            const centerShiftX = (targetWidth - canvas.width * ratio) / 2;
+            const centerShiftY = (targetHeight - canvas.height * ratio) / 2;
+            
+            ctxFinal.drawImage(canvas, 0, 0, canvas.width, canvas.height, centerShiftX, centerShiftY, canvas.width * ratio, canvas.height * ratio);
+
+            const link = document.createElement('a');
+            link.download = `Sertifikat_Pancasila_${GAME.playerName || 'Pemain'}_Landscape.png`;
+            link.href = finalCanvas.toDataURL('image/png', 1.0);
+            link.click();
+        }).catch(err => {
+            if(actionButtons) actionButtons.style.display = 'flex';
+            console.error("Gagal mendownload sertifikat foto:", err);
+            alert("Terjadi kesalahan saat mengunduh sertifikat foto.");
+        });
+    }
+
+    function downloadCertificatePDF() {
+        playSound('click');
+        const certPanel = document.getElementById('certificate-panel');
+        const actionButtons = certPanel.querySelector('.no-print');
+        if(actionButtons) actionButtons.style.display = 'none';
+
+        const opt = {
+            margin:       0,
+            filename:     `Sertifikat_Pancasila_${GAME.playerName || 'Pemain'}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 3, useCORS: true, letterRendering: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        };
+
+        html2pdf().from(certPanel).set(opt).save().then(() => {
+            if(actionButtons) actionButtons.style.display = 'flex';
+        }).catch(err => {
+            if(actionButtons) actionButtons.style.display = 'flex';
+            console.error("Gagal mendownload sertifikat PDF:", err);
+            alert("Terjadi kesalahan saat mengunduh sertifikat PDF.");
+        });
+    }
+
+    const toggleSound = () => {
+        playSound('click');
+        GAME.soundOn = !GAME.soundOn;
+        saveToLocal();
+        const text = GAME.soundOn ? '🔊 SUARA: ON' : '🔇 SUARA: OFF';
+        document.getElementById('btn-toggle-sound').innerText = text;
+        document.getElementById('btn-toggle-sound-pause').innerText = text;
+        if(!GAME.soundOn && engineGain) engineGain.gain.value = 0;
+    };
+    document.getElementById('btn-toggle-sound').onclick = toggleSound;
+    document.getElementById('btn-toggle-sound-pause').onclick = toggleSound;
+    
+    document.getElementById('btn-reset-data').onclick = () => {
+        if(confirm("Yakin ingin menghapus semua data permainan?")) {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
+    };
+
+    function resetGame() {
+        GAME.state = 'menu';
+        updateEngineSound();
+    }
+
+    function checkOrientation() {
+        const prompt = document.getElementById('landscape-prompt');
+        if(window.innerHeight > window.innerWidth && window.innerWidth < 600) {
+            prompt.style.display = 'flex';
+        } else {
+            prompt.style.display = 'none';
+        }
+        resizeCanvas();
+    }
+    window.addEventListener('orientationchange', checkOrientation);
+
+    window.onload = () => {
+        loadData();
+        checkOrientation();
+        if(saveData.name) {
+            document.getElementById('player-name').value = saveData.name;
+        }
+        if(saveData.unlockedLevel < 2) document.getElementById('lvl-2').style.opacity = '0.5';
+        if(saveData.unlockedLevel < 3) document.getElementById('lvl-3').style.opacity = '0.5';
+    };
+</script>
+</body>
+</html>
